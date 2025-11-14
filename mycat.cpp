@@ -30,13 +30,18 @@ int main(int argc, char *argv[]) {
                           << "  --help    Display this help information\n";
                 return 0;
 
-            } else if (options.find(arg) != options.end()) {
-                options[arg] = true;
-
             } else {
-                std::cerr << "Unknown option: " << arg << std::endl;
-                return 1;
 
+                for (size_t j = 1; j < arg.size(); ++j) {
+                    std::string opt("-" + std::string(1, arg[j]));
+
+                    if (options.find(opt) != options.end()) {
+                        options[opt] = true; // Enable the option
+                    } else {
+                        std::cerr << "Warning: Unknown option " << opt << std::endl;
+                        return 1;
+                    }
+                }
             }
         } else { // files
             break; // Stop processing options when a file is encountered
