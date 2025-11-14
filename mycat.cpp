@@ -12,8 +12,9 @@ int main(int argc, char *argv[]) {
 
     // Options map for future enhancements
     std::map<std::string, bool> options{
+        {"--help", false}, // Display help information
         {"-n", false}, // Number all output lines
-        {"--help", false} // Display help information
+        {"-b", false} // Number non-blank output lines
     };
 
     size_t i = 1;
@@ -56,8 +57,12 @@ int main(int argc, char *argv[]) {
 
             // Handle options here in the future
 
-            if (options["-n"] == true) {
-                std::cout << line_number++ << "\t";
+            if (options["-n"] == true || options["-b"] == true) {
+                if (options["-b"] == true && line.empty()) {
+                    std::cout << "\t"; // No line number for blank lines
+                } else {
+                    std::cout << line_number++ << "\t";
+                }
             }
 
             // ending options handling
