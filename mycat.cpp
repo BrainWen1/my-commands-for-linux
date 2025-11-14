@@ -20,6 +20,10 @@ int main(int argc, char *argv[]) {
             std::cout << line << std::endl;
         }
         infile.close();
+
+        if (argc > 2 && i < argc - 1) {
+            std::cout << std::endl; // Print a newline between files
+        }
     }
     return 0;
 }
