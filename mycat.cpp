@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 int main(int argc, char *argv[]) {
     // Check for at least one file argument
@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Options map for future enhancements
-    std::map<std::string, bool> options{
+    std::unordered_map<std::string, bool> options{
         {"--help", false}, // Display help information
         {"-n", false}, // Number all output lines
         {"-b", false}, // Number non-blank output lines
@@ -27,8 +27,10 @@ int main(int argc, char *argv[]) {
             if (arg == "--help") {
                 std::cout << "Usage: " << argv[0] << " [options] <file1> [file2 ... fileN]\n"
                           << "Options:\n"
+                          << "  --help    Display this help information\n"
                           << "  -n        Number all output lines\n"
-                          << "  --help    Display this help information\n";
+                          << "  -b        Number non-blank output lines\n"
+                          << "  -s        Squeeze multiple adjacent blank lines\n";
                 return 0;
 
             } else {
