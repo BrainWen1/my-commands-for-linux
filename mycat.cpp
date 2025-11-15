@@ -14,7 +14,8 @@ int main(int argc, char *argv[]) {
     std::map<std::string, bool> options{
         {"--help", false}, // Display help information
         {"-n", false}, // Number all output lines
-        {"-b", false} // Number non-blank output lines
+        {"-b", false}, // Number non-blank output lines
+        {"-s", false} // Squeeze multiple adjacent blank lines
     };
 
     size_t i = 1;
@@ -57,10 +58,25 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
+        // sign for squeezing blank lines
+        bool squeeze_blank_lines = false;
+
         std::string line;
         while (std::getline(infile, line)) {
 
             // Handle options here in the future
+
+            if (options["-s"] == true) {
+                if (line.empty()) {
+                    if (squeeze_blank_lines == true) {
+                        continue; // Skip this line
+                    } else {
+                        squeeze_blank_lines = true; // Mark that we've seen a blank line
+                    }
+                } else {
+                    squeeze_blank_lines = false; // Reset on non-blank line
+                }
+            }
 
             if (options["-n"] == true || options["-b"] == true) {
                 if (options["-b"] == true && line.empty()) {

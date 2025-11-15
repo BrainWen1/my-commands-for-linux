@@ -1,0 +1,17 @@
+# test_mycat.txt content:
+
+This is a test file for the mycat command
+It contains non-empty lines, single blank lines, and consecutive blank lines
+
+
+Above is 1 single blank line
+
+
+Here is the first line after 3 consecutive blank lines
+(Note: There are 3 consecutive blank lines above this line)
+
+Here is content after 1 single blank line
+
+
+The last line of the file (with 2 consecutive blank lines above it)
+
