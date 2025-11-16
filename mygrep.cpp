@@ -3,6 +3,43 @@
 #include <string>
 #include <unordered_map>
 
+// ANSI color codes for furture enhancements
+const std::string RED = "\033[31m";
+const std::string GREEN = "\033[32m";
+const std::string YELLOW = "\033[33m";
+const std::string LIGHT_BLUE = "\033[94m";
+const std::string PURPLE = "\033[35m";
+
+const std::string COLOR_MATCH = RED; // color for matched pattern
+const std::string COLOR_RESET = "\033[0m";   // reset color
+
+// Function to colorize matched patterns in a line
+std::string colorize_line(const std::string& line, const std::string& pattern) {
+
+    size_t n = pattern.size();
+    if (n == 0) return line; // avoid infinite loop on empty pattern
+
+    size_t pos = 0;
+    std::string result;
+
+    while (true) {
+        // Find the next match position
+        size_t found = line.find(pattern, pos);
+        if (found == std::string::npos) {
+            // No more matches, append the remaining part
+            result += line.substr(pos);
+            break;
+        }
+
+        result += line.substr(pos, found - pos);
+        result += COLOR_MATCH + line.substr(found, n) + COLOR_RESET; // add colored match
+
+        pos = found + n;
+    }
+    return result;
+}
+
+// Main function
 int main(int argc, char *argv[]) {
     // check for correct number of arguments
     if (argc < 2) {
@@ -56,7 +93,7 @@ int main(int argc, char *argv[]) {
         size_t line_number = 1; // counter for line number
 
         std::ifstream infile(argv[i]);
-        if (!infile) {
+        if (!infile) { // check if file opened successfully
             std::cerr << "Error: Could not open file " << argv[i] << std::endl;
             continue; // proceed to the next file
         }
@@ -67,11 +104,14 @@ int main(int argc, char *argv[]) {
             if (line.find(str) != std::string::npos) { // match found
 
                 if (options["-n"] == true) {
-                    std::cout << line_number++ << "\t";
+                    std::cout <<
+                            GREEN << std::to_string(line_number) << COLOR_RESET <<
+                            LIGHT_BLUE << ": \t" << COLOR_RESET;
                 }
 
-                std::cout << line << std::endl;
+                std::cout << colorize_line(line, str) << std::endl;
             }
+            ++line_number;
         }
         infile.close();
     }
