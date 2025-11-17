@@ -79,7 +79,7 @@ void extract_matches(const std::string& line, const std::string& pattern, std::u
 int main(int argc, char *argv[]) {
     // check for correct number of arguments
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " [options] <pattern> <filename...>" << std::endl;
         return 1;
     }
 
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
         if (arg[0] == '-') { // options
 
             if (arg == "--help") {
-                std::cout << "Usage: " << argv[0] << " [options] <filename>\n"
+                std::cout << "Usage: " << argv[0] << " [options] <pattern> <filename...>\n"
                           << "Options:\n"
                           << "  --help    Display this help information\n"
                           << "  -n        Number all output lines\n"

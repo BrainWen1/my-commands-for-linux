@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
     // Check for at least one file argument
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <file1> [file2 ... fileN]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " [options] <filename...>" << std::endl;
         return 1;
     }
 
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         if (arg[0] == '-') { // options
 
             if (arg == "--help") {
-                std::cout << "Usage: " << argv[0] << " [options] <file1> [file2 ... fileN]\n"
+                std::cout << "Usage: " << argv[0] << " [options] <filename...>\n"
                           << "Options:\n"
                           << "  --help    Display this help information\n"
                           << "  -n        Number all output lines\n"
