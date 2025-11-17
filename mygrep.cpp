@@ -62,7 +62,8 @@ int main(int argc, char *argv[]) {
     std::unordered_map<std::string, bool> options{
         {"--help", false}, // Display help information
         {"-n", false}, // Number all output lines
-        {"-i", false} // Case insensitive search
+        {"-i", false}, // Case insensitive search
+        {"-v", false} // Invert match
     };
 
     // process options
@@ -77,7 +78,8 @@ int main(int argc, char *argv[]) {
                           << "Options:\n"
                           << "  --help    Display this help information\n"
                           << "  -n        Number all output lines\n"
-                          << "  -i        Case insensitive search\n";
+                          << "  -i        Case insensitive search\n"
+                          << "  -v        Invert match\n";
                 return 0;
             } else {
 
@@ -127,7 +129,7 @@ int main(int argc, char *argv[]) {
                 std::transform(lower_line.begin(), lower_line.end(), lower_line.begin(), ::tolower);
             }
 
-            if (lower_line.find(lower_str) != std::string::npos) { // match found
+            if (options["-v"] == true ? lower_line.find(lower_str) == std::string::npos : lower_line.find(lower_str) != std::string::npos) { // match found
 
                 if (options["-n"] == true) {
                     std::cout <<
