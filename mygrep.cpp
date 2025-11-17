@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cctype>
+#include <vector>
 
 // ANSI color codes for furture enhancements
 const std::string RED = "\033[31m";
@@ -50,6 +51,30 @@ std::string colorize_line(const std::string& line, const std::string& pattern, s
     return result;
 }
 
+// Function to extract all matching substrings from a line
+void extract_matches(const std::string& line, const std::string& pattern, std::unordered_map<std::string, bool>& options, std::vector<std::string>& matches) {
+    size_t n = pattern.size();
+    if (n == 0) return;
+
+    std::string lower_line = line;
+    std::string lower_pattern = pattern;
+    if (options["-i"]) {
+        std::transform(lower_line.begin(), lower_line.end(), lower_line.begin(), ::tolower);
+        std::transform(lower_pattern.begin(), lower_pattern.end(), lower_pattern.begin(), ::tolower);
+    }
+
+    size_t pos = 0;
+    while (true) {
+        size_t found = lower_line.find(lower_pattern, pos);
+        if (found == std::string::npos) {
+            break;
+        }
+
+        matches.push_back(line.substr(found, n));
+        pos = found + n;
+    }
+}
+
 // Main function
 int main(int argc, char *argv[]) {
     // check for correct number of arguments
@@ -63,7 +88,8 @@ int main(int argc, char *argv[]) {
         {"--help", false}, // Display help information
         {"-n", false}, // Number all output lines
         {"-i", false}, // Case insensitive search
-        {"-v", false} // Invert match
+        {"-v", false}, // Invert match
+        {"-o", false} // Only matching parts of lines
     };
 
     // process options
@@ -79,7 +105,8 @@ int main(int argc, char *argv[]) {
                           << "  --help    Display this help information\n"
                           << "  -n        Number all output lines\n"
                           << "  -i        Case insensitive search\n"
-                          << "  -v        Invert match\n";
+                          << "  -v        Invert match\n"
+                          << "  -o        Only matching parts of lines\n";
                 return 0;
             } else {
 
@@ -94,6 +121,11 @@ int main(int argc, char *argv[]) {
                         return 1;
                     }
                 }
+
+                // Handle special case where -v and -o are both set without a search string
+                if (options["-v"] == true && options["-o"] == true) {
+                    return 0;
+                }
             }
         } else { // string to grep
             break; // Stop processing options when the search string is encountered
@@ -102,6 +134,10 @@ int main(int argc, char *argv[]) {
 
     // Get the text information to be filtered
     std::string str = argv[i];
+    if (str.empty()) {
+        std::cerr << "Error: Search string cannot be empty." << std::endl;
+        return 1;
+    }
     ++i; // point to the first file
 
     std::string lower_str = str;
@@ -129,16 +165,30 @@ int main(int argc, char *argv[]) {
                 std::transform(lower_line.begin(), lower_line.end(), lower_line.begin(), ::tolower);
             }
 
-            if (options["-v"] == true ? lower_line.find(lower_str) == std::string::npos : lower_line.find(lower_str) != std::string::npos) { // match found
+            if (options["-v"] == true ? lower_line.find(lower_str) == std::string::npos : lower_line.find(lower_str) != std::string::npos) {
 
-                if (options["-n"] == true) {
-                    std::cout <<
-                            GREEN << std::to_string(line_number) << COLOR_RESET <<
-                            LIGHT_BLUE << ": \t" << COLOR_RESET;
+                if (options["-o"] == true) {
+                    std::vector<std::string> matches;
+                    extract_matches(line, str, options, matches);
+
+                    for (const auto& match : matches) {
+
+                        if (options["-n"] == true) {
+                            std::cout << GREEN << line_number << COLOR_RESET 
+                                    << LIGHT_BLUE << ": \t" << COLOR_RESET;
+                        }
+                        std::cout << COLOR_MATCH << match << COLOR_RESET << std::endl;
+                    }
+                } else {
+
+                    if (options["-n"] == true) {
+                        std::cout << GREEN << line_number << COLOR_RESET 
+                                << LIGHT_BLUE << ": \t" << COLOR_RESET;
+                    }
+                    std::cout << colorize_line(line, str, options) << std::endl;
                 }
-
-                std::cout << colorize_line(line, str, options) << std::endl;
             }
+             
             ++line_number;
         }
         infile.close();
