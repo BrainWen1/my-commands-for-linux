@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
     
     // Options map for future enhancements
     std::unordered_map<std::string, bool> options{
-        {"--help", false} // Display help information
+        {"--help", false}, // Display help information
+        {"-a", false} // Show all files including hidden files
     };
 
     // process options
@@ -30,7 +31,8 @@ int main(int argc, char *argv[]) {
             if (arg == "--help") {
                 std::cout << "Usage: " << argv[0] << " [options] <directory...>\n"
                           << "Options:\n"
-                          << "  --help    Display this help information\n";
+                          << "  --help    Display this help information\n"
+                          << "  -a        Show all files including hidden files\n";
                 return 0;
             } else {
                 
@@ -51,7 +53,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Determine the starting index for directory paths
-    fs::path dir_path =  (argc > 1) ? fs::path(argv[i]) : fs::current_path();
+    fs::path dir_path = (argc > i) ? fs::path(argv[i]) : fs::current_path();
     if (!fs::exists(dir_path) || !fs::is_directory(dir_path)) {
         std::cerr << "Error: " << dir_path << " is not a valid directory." << std::endl;
         return 1;
@@ -74,7 +76,8 @@ int main(int argc, char *argv[]) {
     for (const auto& entry : entries) {
         std::string str = entry.path().filename().string();
 
-        if (str[0] == '.') continue; // skip hidden files
+        // skip hidden files unless -a is specified
+        if (str[0] == '.' && options["-a"] == false) continue;
 
         if (entry.is_symlink()) { // symbolic link
             std::cout << CYAN << str << RESET;
