@@ -16,6 +16,10 @@ const std::string PURPLE = "\033[35m";
 const std::string COLOR_MATCH = RED; // color for matched pattern
 const std::string COLOR_RESET = "\033[0m";   // reset color
 
+void process_stream(std::istream &in, const std::string &pattern, 
+                   std::unordered_map<std::string, bool> &options,
+                   const std::string &filename, bool multiple_files);
+
 // Function to colorize matched patterns in a line
 std::string colorize_line(const std::string& line, const std::string& pattern, std::unordered_map<std::string, bool>& options) {
 
@@ -148,78 +152,96 @@ int main(int argc, char *argv[]) {
         std::transform(lower_str.begin(), lower_str.end(), lower_str.begin(), ::tolower);
     }
 
-    // Determine if multiple files are being processed
-    bool multiple_files = (argc - i > 1);
+    // process files or standard input
+    if (i < argc) {
+        // check if multiple files are provided
+        bool multiple_files = (argc - i > 1);
 
-    // Determine if -c is used without -o
-    // -o is prioritized over -c
-    bool use_c = options["-c"] && !options["-o"];
+        for (; i < argc; ++i) {
+            std::string filename = argv[i];
 
-    // process files
-    for ( ; i != argc; ++i) {
-        size_t line_number = 1; // counter for line number
-        size_t match_count = 0; // counter for matching lines
-
-        std::ifstream infile(argv[i]);
-        if (!infile) { // check if file opened successfully
-            std::cerr << "Error: Could not open file " << argv[i] << std::endl;
-            continue; // proceed to the next file
-        }
-
-        std::string line;
-        while (std::getline(infile, line)) {
-
-            // handle case insensitive search
-            std::string lower_line = line;
-            if (options["-i"] == true) {
-                std::transform(lower_line.begin(), lower_line.end(), lower_line.begin(), ::tolower);
+            std::ifstream infile(filename);
+            if (!infile) {
+                std::cerr << "Error: Could not open file " << filename << std::endl;
+                continue;
             }
+            process_stream(infile, str, options, filename, multiple_files);
 
-            if (options["-v"] == true ? lower_line.find(lower_str) == std::string::npos : lower_line.find(lower_str) != std::string::npos) {
-
-                if (use_c == false) {
-
-                    if (options["-o"] == true) {
-                        std::vector<std::string> matches;
-                        extract_matches(line, str, options, matches);
-
-                        for (const auto& match : matches) {
-
-                            if (options["-n"] == true) {
-                                std::cout << GREEN << line_number << COLOR_RESET 
-                                        << LIGHT_BLUE << ": \t" << COLOR_RESET;
-                            }
-                            std::cout << COLOR_MATCH << match << COLOR_RESET << std::endl;
-                        }
-                    } else {
-
-                        if (options["-n"] == true) {
-                            std::cout << GREEN << line_number << COLOR_RESET 
-                                    << LIGHT_BLUE << ": \t" << COLOR_RESET;
-                        }
-                        std::cout << colorize_line(line, str, options) << std::endl;
-                    }
-                } else {
-                    
-                    ++match_count;
-                }
-            }
-             
-            ++line_number;
+            infile.close();
         }
-        infile.close();
-
-        // Print count of matching lines if -c option is set
-        if (use_c == true) {
-            if (multiple_files == true) {
-                std::cout << PURPLE << argv[i] << COLOR_RESET 
-                          << LIGHT_BLUE << ":" << COLOR_RESET 
-                          << match_count << std::endl;
-            } else {
-                std::cout << match_count << std::endl;
-            }
-        }
+    } else { // read from standard input
+        process_stream(std::cin, str, options, "", false);
     }
 
     return 0;
+}
+
+// Function to process an input stream (file or stdin)
+void process_stream(std::istream &in, const std::string &pattern, 
+                   std::unordered_map<std::string, bool> &options,
+                   const std::string &filename, bool multiple_files) {
+
+    size_t line_number = 1; // line counter
+    size_t match_count = 0; // match counter
+    std::string lower_pattern = pattern;
+
+    // prepare lowercase pattern for case insensitive search
+    if (options["-i"]) {
+        std::transform(lower_pattern.begin(), lower_pattern.end(), 
+                      lower_pattern.begin(), ::tolower);
+    }
+
+    std::string line;
+    while (std::getline(in, line)) {
+        std::string lower_line = line;
+        if (options["-i"]) {
+            std::transform(lower_line.begin(), lower_line.end(), 
+                          lower_line.begin(), ::tolower);
+        }
+
+        // Determine if the current line matches the pattern
+        bool is_match = (lower_line.find(lower_pattern) != std::string::npos);
+        if (options["-v"]) { // invert match
+            is_match = !is_match;
+        }
+
+        if (is_match == true) {
+            if (!options["-c"] || options["-o"]) { // if not counting or only matching parts
+                if (multiple_files && !filename.empty()) {
+                    std::cout << PURPLE << filename << COLOR_RESET 
+                              << LIGHT_BLUE << ":" << COLOR_RESET;
+                }
+
+                if (options["-o"]) {
+                    std::vector<std::string> matches;
+                    extract_matches(line, pattern, options, matches);
+                    for (const auto &match : matches) {
+                        if (options["-n"]) {
+                            std::cout << GREEN << line_number << COLOR_RESET
+                                      << LIGHT_BLUE << ": \t" << COLOR_RESET;
+                        }
+                        std::cout << COLOR_MATCH << match << COLOR_RESET << std::endl;
+                    }
+                } else {
+                    if (options["-n"]) {
+                        std::cout << GREEN << line_number << COLOR_RESET
+                                  << LIGHT_BLUE << ": \t" << COLOR_RESET;
+                    }
+                    std::cout << colorize_line(line, pattern, options) << std::endl;
+                }
+            } else {
+                match_count++;
+            }
+        }
+        line_number++;
+    }
+
+    // print count if -c is specified and -o is not
+    if (options["-c"] && !options["-o"]) {
+        if (multiple_files && !filename.empty()) {
+            std::cout << PURPLE << filename << COLOR_RESET
+                      << LIGHT_BLUE << ":" << COLOR_RESET;
+        }
+        std::cout << match_count << std::endl;
+    }
 }
