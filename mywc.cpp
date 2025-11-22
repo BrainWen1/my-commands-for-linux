@@ -23,7 +23,8 @@ int main(int argc, char *argv[]) {
         {"--help", false}, // Display help information
         {"-l", false}, // Show line counts
         {"-c", false}, // Show byte counts
-        {"-w", false} // Show word counts
+        {"-w", false}, // Show word counts
+        {"-L", false} // Show longest line length
     };
 
     // process command-line arguments
@@ -41,7 +42,8 @@ int main(int argc, char *argv[]) {
                      << "  --help    Display this help information\n"
                      << "  -l        Show line counts\n"
                      << "  -c        Show byte counts\n"
-                     << "  -w        Show word counts\n";
+                     << "  -w        Show word counts\n"
+                     << "  -L        Show longest line length\n";
                 return 0;
             } else {
 
@@ -83,11 +85,18 @@ ostream &process(std::istream &in, unordered_map<string, bool> &options) {
     size_t line_count = 0;
     size_t word_count = 0;
     size_t char_count = 0;
+    size_t max_line_length = 0;
 
     string line;
     while (std::getline(in, line)) {
         ++line_count;
         char_count += line.size() + 1; // +1 for newline character
+
+        if (options["-L"] == true) {
+            if (line.size() > max_line_length) {
+                max_line_length = line.size();
+            }
+        }
 
         istringstream iss(line);
         string word;
@@ -105,9 +114,12 @@ ostream &process(std::istream &in, unordered_map<string, bool> &options) {
     if (options["-c"] == true) {
         cout << "Bytes: " << char_count << " ";
     }
+    if (options["-L"] == true) {
+        cout << "Max Length: " << max_line_length << " ";
+    }
 
     // default: show all counts if no specific option is given
-    if (options["-l"] == false && options["-w"] == false && options["-c"] == false) {
+    if (options["-l"] == false && options["-w"] == false && options["-c"] == false && options["-L"] == false) {
         cout << "Lines: " << line_count << " "
              << "Words: " << word_count << " "
              << "Bytes: " << char_count << " ";
